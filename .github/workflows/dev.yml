@@ -1,0 +1,60 @@
+name: dev
+
+on:
+  workflow_dispatch:
+
+jobs:
+  plan:
+    name: plan
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: MOZGIII/action-plan@dev
+        id: plan
+        with:
+          plan-file: .github/action-plan.ts
+
+  action:
+    needs:
+      - plan
+    strategy:
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+      fail-fast: false
+    name: ${{ matrix.commands.name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: ${{ matrix.commands.command }}
+
+  test:
+    strategy:
+      matrix:
+        test:
+          - plan-file: ./test/simple-default/plan.ts
+          - plan-file: ./test/simple-non-default/plan.ts
+            plan: test
+          - plan-file: ./test/multi-file/plan.ts
+          - plan-file: ./test/custom-tsconfig/plan.ts
+            tsconfig: ./test/custom-tsconfig/tsconfig.json
+          - plan-file: ./test/import-packages-no-types/plan.ts
+          - plan-file: ./test/import-packages-with-types/plan.ts
+          - plan-file: ./test/js/plan.js
+      fail-fast: false
+
+    name: test / ${{ matrix.test.name || matrix.test.plan-file }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: MOZGIII/action-plan@dev
+        id: plan
+        with:
+          plan-file: ${{ matrix.test.plan-file }}
+          plan: ${{ matrix.test.plan || 'default' }}
+          tsconfig: ${{ matrix.test.tsconfig }}

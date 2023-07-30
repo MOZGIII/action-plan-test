@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Custom",
+  "extends": "@action-plan/exec",
+  "compilerOptions": {
+    "noUnusedLocals": false
+  },
+  "include": ["plan.ts"]
+}
